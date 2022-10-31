@@ -10,6 +10,12 @@ package com.applet;/*
   
 */
 import com.applet.EDU.oswego.cs.dl.util.concurrent.*;
+import jcsp.lang.AltingChannelInput;
+import jcsp.lang.StandardChannelFactory;
+import jcsp.net2.NetChannel;
+import jcsp.net2.cns.CNS;
+import jcsp.net2.tcpip.TCPIPNodeAddress;
+
 import java.util.*;
 import java.applet.*;
 import java.awt.*;
@@ -17,6 +23,8 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.beans.*;
 import java.net.*;
+import java.util.function.Function;
+
 class Helper {  // Dummy standin for referenced generic "com.applet.Helper" classes
   void handle() {} 
   void operation() {} 
@@ -2258,9 +2266,9 @@ class ATSavingsAccount extends BankAccount {
 }
 class Subject {
   protected double val = 0.0;       // modeled state
-  protected final EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArrayList observers =
+  protected final com.applet.EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArrayList observers =
                                  new 
-EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArrayList();
+com.applet.EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArrayList();
   public synchronized double getValue() { return val; }
   protected synchronized void setValue(double d) { val = d; }
   public void attach(Observer o) { observers.add(o); }
@@ -3697,7 +3705,7 @@ class FibVCB extends FJTask {
       new FibVCB(n - 1, this).fork();
       new FibVCB(n - 2, this).fork();
       // Wait for callbacks from children
-      while (callbacksReceived < callbacksExpected) yield(); 
+      while (callbacksReceived < callbacksExpected) yield();
     }
     // Call back parent
     if (parent != null) parent.addToResult(number); 
@@ -3948,15 +3956,15 @@ class ActiveRunnableExecutor extends Thread {
 //import jcsp.lang.*;
 class Fork implements jcsp.lang.CSProcess {
   private final jcsp.lang.AltingChannelInput[] fromPhil;
-  Fork(jcsp.lang.AltingChannelInput l, jcsp.lang.AltingChannelInput r) { 
-    fromPhil = new jcsp.lang.AltingChannelInput[] { l, r }; 
+  Fork(jcsp.lang.AltingChannelInput l, jcsp.lang.AltingChannelInput r) {
+    fromPhil = new jcsp.lang.AltingChannelInput[] { l, r };
   }
   public void run() {
     jcsp.lang.Alternative alt = new jcsp.lang.Alternative(fromPhil);
     for (;;) {
       int i = alt.select();   // await message from either
       fromPhil[i].read();     // pick up
-      fromPhil[i].read();     // put down 
+      fromPhil[i].read();     // put down
     }
   }
 }
@@ -3971,7 +3979,7 @@ class Butler implements jcsp.lang.CSProcess {
     int seats = enters.length;
     int nseated = 0;
     // set up arrays for select
-    jcsp.lang.AltingChannelInput[] chans = new 
+    jcsp.lang.AltingChannelInput[] chans = new
 jcsp.lang.AltingChannelInput[2*seats];
     for (int i = 0; i < seats; ++i) {
       chans[i] = exits[i];
@@ -3979,7 +3987,7 @@ jcsp.lang.AltingChannelInput[2*seats];
     }
     jcsp.lang.Alternative either = new jcsp.lang.Alternative(chans);
     jcsp.lang.Alternative exit = new jcsp.lang.Alternative(exits);
-    for (;;) {   
+    for (;;) {
       // if max number are seated, only allow exits
       jcsp.lang.Alternative alt = (nseated <  seats-1)? either : exit;
       int i = alt.fairSelect();
@@ -3996,9 +4004,9 @@ class Philosopher implements jcsp.lang.CSProcess {
   private final jcsp.lang.ChannelOutput exit;
   Philosopher(jcsp.lang.ChannelOutput l, jcsp.lang.ChannelOutput r,
               jcsp.lang.ChannelOutput e, jcsp.lang.ChannelOutput x) {
-    leftFork = l; 
+    leftFork = l;
     rightFork = r;
-    enter = e; 
+    enter = e;
     exit = x;
   }
   public void run() {
@@ -4013,17 +4021,18 @@ class Philosopher implements jcsp.lang.CSProcess {
       exit.write(null);           // leave seat
     }
   }
-  private void eat() {} 
+  private void eat() {}
   private void think() {}
 }
 class College implements jcsp.lang.CSProcess {
   final static int N = 5;
   private final jcsp.lang.CSProcess action;
+
   College() {
-    jcsp.lang.One2OneChannel[] lefts = jcsp.lang.One2OneChannel.create(N);
-    jcsp.lang.One2OneChannel[] rights = jcsp.lang.One2OneChannel.create(N);
-    jcsp.lang.One2OneChannel[] enters = jcsp.lang.One2OneChannel.create(N);
-    jcsp.lang.One2OneChannel[] exits = jcsp.lang.One2OneChannel.create(N);
+    jcsp.lang.AltingChannelInput[] lefts = create(AltingChannelInput.class, N, (num) -> NetChannel.net2one());
+    jcsp.lang.AltingChannelInput[] rights = create(AltingChannelInput.class, N, (num) -> NetChannel.net2one());
+    jcsp.lang.AltingChannelInput[] enters = create(AltingChannelInput.class, N, (num) -> NetChannel.net2one());
+    jcsp.lang.AltingChannelInput[] exits = create(AltingChannelInput.class, N, (num) -> NetChannel.net2one());
     Butler butler = new Butler(enters, exits);
     Philosopher[] phils = new Philosopher[N];
     for (int i = 0; i < N; ++i)
@@ -4038,6 +4047,14 @@ class College implements jcsp.lang.CSProcess {
         new jcsp.lang.Parallel(phils),
         new jcsp.lang.Parallel(forks)
       });
+  }
+
+  private static <T> T[] create(Class<T> clazz, int n, Function<Integer, T> createFunction) {
+    T[] objects = (T[]) Array.newInstance(clazz, n);
+    for (int i = 0; i < n; i++) {
+      objects[i] = createFunction.apply(i);
+    }
+    return objects;
   }
   public void run() { action.run(); }
   public static void main(String[] args) {
