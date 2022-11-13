@@ -49,7 +49,7 @@ class Particle {
   }
 }
 class ParticleCanvas extends Canvas {
-  private Particle[] particles = new Particle[0]; 
+  private static Particle[] particles = new Particle[0]; 
   ParticleCanvas(int size) {
     setSize(new Dimension(size, size));
   }
@@ -60,7 +60,7 @@ class ParticleCanvas extends Canvas {
       throw new IllegalArgumentException("Cannot set null");
     particles = ps; 
   }
-  protected synchronized Particle[] getParticles() { 
+  protected synchronized static Particle[] getParticles() { 
     return particles; 
   }
  
@@ -2092,7 +2092,7 @@ class LatchingThermometer {                      // Seldom useful
 class FillAndEmpty {                              // Incomplete
   static final int SIZE = 1024; // buffer size, for demo
   protected Rendezvous exchanger = new Rendezvous(2);
-  protected byte readByte() { return 1; /* ... */; }
+  protected byte readByte() { return 1; /* ... */ }
   protected void useByte(byte b) { /* ... */ }
   public void start() {
     new Thread(new FillingLoop()).start();
