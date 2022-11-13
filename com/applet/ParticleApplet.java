@@ -55,7 +55,7 @@ class ParticleCanvas extends Canvas {
   }
  
   // Intended to be called by applet
-  synchronized void setParticles(Particle[] ps) {
+  synchronized static void setParticles(Particle[] ps) {
     if (ps == null) 
       throw new IllegalArgumentException("Cannot set null");
     particles = ps; 
