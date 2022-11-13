@@ -11,9 +11,8 @@ public class JUnitTesting
     @Test
     public void testArrayNotNull()
     {
-        final Particle[] particlesTest = new Particle[0];
         final Particle[] particlesTest2 = ParticleCanvas.getParticles();
-        assertArrayEquals("Array Must be equal", particlesTest, particlesTest2);
+        assertNotEquals("Array Must be empty not null", null, particlesTest2);
     }
 
     @Test
@@ -49,8 +48,18 @@ public class JUnitTesting
     }
 
     @Test
-    public void testChangingParticle()
+    public void testChangingParticle()//Particle canvas should not change or create any particles
     {
+        Particle particle1 = new Particle(2, 5);
+        Particle particle2 = new Particle(8, 9);
+        Particle[] arr = new Particle[2];
+        arr[0] = particle1;
+        arr[1] = particle2;
+
+        ParticleCanvas.setParticles(arr);
+
+        assertEquals(arr.length, ParticleCanvas.getParticles().length); //Shows this method does not change the length
+        assertArrayEquals(arr, ParticleCanvas.getParticles()); // shows Particle canvas does not change any values
 
     }
 
