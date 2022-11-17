@@ -1,12 +1,12 @@
 package com.applet.particle;
 
-import java.applet.Applet;
-
-class ParticleApplet extends Applet {
+class ParticleApplet extends JavaSwingAbstractApp {
     protected Thread[] threads; // null when not running
     protected final ParticleCanvas canvas
             = new ParticleCanvas(100);
-    public void init() { add(canvas); }
+    public void init() {
+        add(canvas);
+    }
     protected Thread makeThread(final Particle p) { // utility
         Runnable runloop = () -> {
             try {
@@ -40,5 +40,11 @@ class ParticleApplet extends Applet {
                 threads[i].interrupt();
             threads = null;
         }
+    }
+
+    public static void main(String[] args) {
+        ParticleApplet applet = new ParticleApplet();
+        applet.init();
+        applet.start();
     }
 }
